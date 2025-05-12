@@ -7,7 +7,10 @@ let app = express()
 const server=http.createServer(app)
 const io=new Server(server,{
     cors:{
-        origin:"https://chatly-omega.vercel.app/"
+        origin:"https://chatly-omega.vercel.app/",
+        methods:["GET","POST"],
+        
+
     }
 })
  const userSocketMap ={}
