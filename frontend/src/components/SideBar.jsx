@@ -1,122 +1,87 @@
-import React, { useEffect, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import dp from "../assets/dp.webp"
-import { IoIosSearch } from "react-icons/io";
-import { RxCross2 } from "react-icons/rx";
-import { BiLogOutCircle } from "react-icons/bi";
-import { serverUrl } from '../main';
-import axios from 'axios';
-import { setOtherUsers, setSearchData, setSelectedUser, setUserData } from '../redux/userSlice';
-import { useNavigate } from 'react-router-dom';
-function SideBar() {
-    let {userData,otherUsers,selectedUser,onlineUsers,searchData} = useSelector(state=>state.user)
-    let [search,setSearch]=useState(false)
-    let [input,setInput]=useState("")
-let dispatch=useDispatch()
-let navigate=useNavigate()
-    const handleLogOut=async ()=>{
-        try {
-            let result =await axios.get(`${serverUrl}/api/auth/logout`,{withCredentials:true})
-dispatch(setUserData(null))
-dispatch(setOtherUsers(null))
-navigate("/login")
-        } catch (error) {
-            console.log(error)
-        }
-    }
+import { useEffect, useState } from "react";
+import { useChatStore } from "../store/useChatStore";
+import { useAuthStore } from "../store/useAuthStore";
+import SidebarSkeleton from "./skeletons/SidebarSkeleton";
+import { Users } from "lucide-react";
 
-    const handlesearch=async ()=>{
-        try {
-            let result =await axios.get(`${serverUrl}/api/user/search?query=${input}`,{withCredentials:true})
-            dispatch(setSearchData(result.data))
-           
-        }
-        catch(error){
-console.log(error)
-        }
-    }
+const Sidebar = () => {
+  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } = useChatStore();
 
-    useEffect(()=>{
-        if(input){
-            handlesearch()
-        }
+  const { onlineUsers } = useAuthStore();
+  const [showOnlineOnly, setShowOnlineOnly] = useState(false);
 
-    },[input])
+  useEffect(() => {
+    getUsers();
+  }, [getUsers]);
+
+  const filteredUsers = showOnlineOnly
+    ? users.filter((user) => onlineUsers.includes(user._id))
+    : users;
+
+  if (isUsersLoading) return <SidebarSkeleton />;
+
   return (
-    <div className={`lg:w-[30%] w-full h-full overflow-hidden lg:block bg-slate-200  relative ${!selectedUser?"block":"hidden"}`}>
-        <div className='w-[60px] h-[60px] mt-[10px] rounded-full overflow-hidden flex justify-center items-center bg-[#20c7ff] shadow-gray-500 text-gray-700 cursor-pointer shadow-lg fixed bottom-[20px] left-[10px]' onClick={handleLogOut}>
-   <BiLogOutCircle className='w-[25px] h-[25px]'/>
-</div>
-{input.length>0 && <div className='flex absolute top-[250px] bg-[white] w-full h-[500px] overflow-y-auto items-center pt-[20px] flex-col gap-[10px] z-[150] shadow-lg'>
-{searchData?.map((user)=>(
-     <div className='w-[95%] h-[70px] flex items-center gap-[20px]  px-[10px] hover:bg-[#78cae5] border-b-2 border-gray-400 cursor-pointer' onClick={()=>{
-        dispatch(setSelectedUser(user))
-        setInput("")
-        setSearch(false)
-     }
-        }>
-     <div className='relative rounded-full bg-white  flex justify-center items-center '>
-     <div className='w-[60px] h-[60px]   rounded-full overflow-hidden flex justify-center items-center '>
-     <img src={user.image || dp} alt="" className='h-[100%]'/>
-     </div>
-     {onlineUsers?.includes(user._id) &&
-     <span className='w-[12px] h-[12px] rounded-full absolute bottom-[6px] right-[-1px] bg-[#3aff20] shadow-gray-500 shadow-md'></span>}
-     </div>
-     <h1 className='text-gray-800 font-semibold text-[20px]'>{user.name || user.userName}</h1>
-     </div>
-))}
-        </div> }
-
-      <div className='w-full h-[300px] bg-[#20c7ff] rounded-b-[30%] shadow-gray-400 shadow-lg flex flex-col justify-center px-[20px] '>
-    <h1 className='text-white font-bold text-[25px]'>chatly</h1>
-   <div className='w-full flex justify-between items-center'>
-    <h1 className='text-gray-800 font-bold text-[25px]'>Hii , {userData.name || "user"}</h1>
-    <div className='w-[60px] h-[60px] rounded-full overflow-hidden flex justify-center items-center bg-white cursor-pointer shadow-gray-500 shadow-lg' onClick={()=>navigate("/profile")}>
-<img src={userData.image || dp} alt="" className='h-[100%]'/>
-</div>
-   </div>
-   <div className='w-full  flex items-center gap-[20px] overflow-y-auto py-[18px]'>
-    {!search && <div className='w-[60px] h-[60px] mt-[10px] rounded-full overflow-hidden flex justify-center items-center bg-white shadow-gray-500 cursor-pointer shadow-lg' onClick={()=>setSearch(true)}>
-   <IoIosSearch className='w-[25px] h-[25px]'/>
-</div>}
-
-{search && 
-    <form className='w-full h-[60px] bg-white shadow-gray-500 shadow-lg flex items-center gap-[10px] mt-[10px] rounded-full overflow-hidden px-[20px] relative'>
-    <IoIosSearch className='w-[25px] h-[25px]'/>
-    <input type="text" placeholder='search users...' className='w-full h-full p-[10px] text-[17px] outline-none border-0 ' onChange={(e)=>setInput(e.target.value)} value={input}/>
-    <RxCross2 className='w-[25px] h-[25px] cursor-pointer' onClick={()=>setSearch(false)}/>
-     
-    </form>
-    }
-{!search && otherUsers?.map((user)=>(
-    onlineUsers?.includes(user._id) &&
-    <div className='relative rounded-full shadow-gray-500 bg-white shadow-lg flex justify-center items-center mt-[10px] cursor-pointer' onClick={()=>dispatch(setSelectedUser(user))}>
-    <div className='w-[60px] h-[60px]   rounded-full overflow-hidden flex justify-center items-center '>
-    <img src={user.image || dp} alt="" className='h-[100%]'/>
-    </div>
-    <span className='w-[12px] h-[12px] rounded-full absolute bottom-[6px] right-[-1px] bg-[#3aff20] shadow-gray-500 shadow-md'></span>
-    </div>
-))}
- 
-   </div>
+    <aside className="h-full w-20 lg:w-72 border-r border-base-300 flex flex-col transition-all duration-200">
+      <div className="border-b border-base-300 w-full p-5">
+        <div className="flex items-center gap-2">
+          <Users className="size-6" />
+          <span className="font-medium hidden lg:block">Contacts</span>
+        </div>
+        {/* TODO: Online filter toggle */}
+        <div className="mt-3 hidden lg:flex items-center gap-2">
+          <label className="cursor-pointer flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={showOnlineOnly}
+              onChange={(e) => setShowOnlineOnly(e.target.checked)}
+              className="checkbox checkbox-sm"
+            />
+            <span className="text-sm">Show online only</span>
+          </label>
+          <span className="text-xs text-zinc-500">({onlineUsers.length - 1} online)</span>
+        </div>
       </div>
 
-      <div className='w-full h-[50%] overflow-auto flex flex-col gap-[20px] items-center mt-[20px]'>
-{otherUsers?.map((user)=>(
-    <div className='w-[95%] h-[60px] flex items-center gap-[20px] shadow-gray-500 bg-white shadow-lg rounded-full hover:bg-[#78cae5] cursor-pointer' onClick={()=>dispatch(setSelectedUser(user))}>
-    <div className='relative rounded-full shadow-gray-500 bg-white shadow-lg flex justify-center items-center mt-[10px]'>
-    <div className='w-[60px] h-[60px]   rounded-full overflow-hidden flex justify-center items-center '>
-    <img src={user.image || dp} alt="" className='h-[100%]'/>
-    </div>
-    {onlineUsers?.includes(user._id) &&
-    <span className='w-[12px] h-[12px] rounded-full absolute bottom-[6px] right-[-1px] bg-[#3aff20] shadow-gray-500 shadow-md'></span>}
-    </div>
-    <h1 className='text-gray-800 font-semibold text-[20px]'>{user.name || user.userName}</h1>
-    </div>
-))}
-      </div>
-    </div>
-  )
-}
+      <div className="overflow-y-auto w-full py-3">
+        {filteredUsers.map((user) => (
+          <button
+            key={user._id}
+            onClick={() => setSelectedUser(user)}
+            className={`
+              w-full p-3 flex items-center gap-3
+              hover:bg-base-300 transition-colors
+              ${selectedUser?._id === user._id ? "bg-base-300 ring-1 ring-base-300" : ""}
+            `}
+          >
+            <div className="relative mx-auto lg:mx-0">
+              <img
+                src={user.profilePic || "/avatar.png"}
+                alt={user.name}
+                className="size-12 object-cover rounded-full"
+              />
+              {onlineUsers.includes(user._id) && (
+                <span
+                  className="absolute bottom-0 right-0 size-3 bg-green-500 
+                  rounded-full ring-2 ring-zinc-900"
+                />
+              )}
+            </div>
 
-export default SideBar
+            {/* User info - only visible on larger screens */}
+            <div className="hidden lg:block text-left min-w-0">
+              <div className="font-medium truncate">{user.fullName}</div>
+              <div className="text-sm text-zinc-400">
+                {onlineUsers.includes(user._id) ? "Online" : "Offline"}
+              </div>
+            </div>
+          </button>
+        ))}
+
+        {filteredUsers.length === 0 && (
+          <div className="text-center text-zinc-500 py-4">No online users</div>
+        )}
+      </div>
+    </aside>
+  );
+};
+export default Sidebar;
