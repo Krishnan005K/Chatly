@@ -8,7 +8,7 @@
     "start": "npm run start --prefix backend"
   },
   "keywords": [],
-  "author": "",
+  "author": "Krishnan K",
   "license": "ISC",
   "dependencies": {
     "chat-app": "file:",
