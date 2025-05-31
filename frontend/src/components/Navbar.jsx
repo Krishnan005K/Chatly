@@ -17,7 +17,7 @@ const Navbar = () => {
               <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center">
                 <img src="/logo.png" alt="logo" className="w-6 h-6" />
               </div>
-              <h1 className="text-lg font-bold">Chatly</h1>
+              <h1 className="text-lg font-bold">ZyraChat</h1>
             </Link>
           </div>
 
